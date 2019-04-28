@@ -1,0 +1,39 @@
+<!-- This is a static file -->
+<!-- served from your routes in server.js -->
+
+<!-- You might want to try something fancier: -->
+<!-- html/nunjucks docs: https://mozilla.github.io/nunjucks/ -->
+<!-- pug: https://pugjs.org/ -->
+<!-- haml: http://haml.info/ -->
+<!-- hbs(handlebars): http://handlebarsjs.com/ -->
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <title>Liste des utilisateur</title>
+    <meta charset="utf-8">
+    <link href="public/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <table>
+      <tr>
+        <th>login</th>
+        <th>pass</th>
+        <th>name</th>
+        <th>color1</th>
+        <th>color2</th>
+      </tr>
+      {% for elem in listes %}
+      <tr>
+        <td>{{ elem.login }}</td>
+        <td>{{ elem.pass }}</td>
+        <td>{{ elem.name }}</td>
+        {% if color1 !== null %}
+        <td style="background-color: {{ elem.color1 }}"></td>
+        <td style="background-color: {{ elem.color2 }}"></td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>
