@@ -22,18 +22,68 @@ app.engine('html', consolidate.nunjucks);
 app.set('view engine', 'nunjucks');
 //app.set('views', 'views');
 
+// session
+var session = require('express-session');
+
+app.use(session({
+    secret: '12345',
+    resave: false,
+    saveUninitialized: false,
+}));
 
 // On ajoute une route pour l'url /
 app.get('/', function(req, res)
               {
-                res.send('Hello !!!');
+                if(req.session.login)
+                {
+                  res.redirect('/userlist');
+                }
+                else
+                {
+                  res.render('connexion.html');
+                }
+              }
+);
+
+// On ajoute une route pour l'url / (post)
+app.post('/', async function(req, res)
+              {
+                if(req.body.login != '' && req.body.pass != '')
+                {
+                    try
+                    {
+                      var connect = await knex('users').select('*')
+                                                        .where('login', req.body.login)
+                                                        .andWhere('pass', req.body.pass);
+                      if(connect.length != 0)
+                      {
+                        req.session.login = connect[0].login;
+                        req.session.name = connect[0].name;
+                        req.session.color1 = connect[0].color1;
+                        req.session.color2 = connect[0].color2;
+                        res.redirect('/userlist');
+                      }
+                      else
+                      {
+                        res.render('connexion.html', { message : 'Login ou mot de passe incorrect', 'login' : req.body.login});
+                      }
+                     
+                    }catch(error)
+                    {
+                      
+                    }
+                }
+                else
+                {
+                  res.redirect('/');
+                }
               }
 );
 
 app.get('/signin', function(req, res)
               {
-                //res.send('Hello !!!');
-                res.sendFile(__dirname + '/public/ajoutUser.html');
+                //res.sendFile(__dirname + '/public/ajoutUser.html');
+                res.render('ajoutUser.html');
               }
 );
 
@@ -42,26 +92,77 @@ app.post('/signin', async function(req, res)
               {
                   if(req.body.login != '' && req.body.pass != '')
                   {
-                    let insert = await knex.raw('INSERT INTO users VALUES (?, ?, ?, ?, ?)',
-                                [ req.body.login, req.body.pass, req.body.name, req.body.color1, req.body.color2]);
+                    if(req.body.pass === req.body.confPass)
+                    {
+                      try
+                      {
+                        let insert = await knex.raw('INSERT INTO users VALUES (?, ?, ?, ?, ?)',
+                                    [ req.body.login, req.body.pass, req.body.name, req.body.color1, req.body.color2]);
+                        res.redirect('/');
+                      }catch(error)
+                      {
+                        res.render('ajoutUser.html', { existe : 'Ce nom est déja utilisé',
+                                                     'login' : req.body.login,
+                                                    'pass' : req.body.pass,
+                                                    'name' : req.body.name,
+                                                    'color1' : req.body.color1,
+                                                    'color2' : req.body.color2
+                                                     });
+                      }
+                    }
+                    else
+                    {
+                      res.render('ajoutUser.html', {'login' : req.body.login,
+                                                  'pass' : req.body.pass,
+                                                  'name' : req.body.name,
+                                                  'color1' : req.body.color1,
+                                                  'color2' : req.body.color2,
+                                                  'confirmation' : 'mode de passe différent'
+                                                 });
+                    }
+                      
                   }
-                  res.redirect('/signin');
+                  else if(req.body.login === '' && req.body.pass === '')
+                  {
+                    res.render('ajoutUser.html', { message : 'Ce champs ne peux pas être vide' });
+                  }
+                  else
+                  {
+                    res.render('ajoutUser.html', {'login' : req.body.login,
+                                                  'pass' : req.body.pass,
+                                                  'name' : req.body.name,
+                                                  'color1' : req.body.color1,
+                                                  'color2' : req.body.color2
+                                                 }
+                               );
+                  }
               }
 );
 
-// On ajoute une route pour l'url /logoutet
-app.get('/logoutet', function(req, res)
+// On ajoute une route pour l'url /logout
+app.get('/logout', function(req, res)
               {
-                
+                req.session.login = null;
+                req.session.name = null;
+                req.session.color1 = null;
+                req.session.color2 = null;
+                res.redirect('/');
               }
 );
 
 // On ajoute une route pour l'url /userlist
 app.get('/userlist', async function(req, res)
               {
-                let usersListe = await knex('users').select('*');
-                console.log('ici');
-                res.render('usersList.html', {'listes': usersListe});
+                if(req.session.login)
+                {
+                  let usersListe = await knex('users').select('*');
+                  console.log('ici');
+                  res.render('usersList.html', {'listes': usersListe, 'userConnect': req.session.name});
+                }
+                else
+                {
+                  res.redirect('/');
+                }
               }
 );
 
