@@ -12,9 +12,12 @@
   <head>
     <title>Liste des utilisateur</title>
     <meta charset="utf-8">
-    <link href="public/style.css" rel="stylesheet">
+   <!-- <link href="public/style.css" rel="stylesheet"> -->
   </head>
   <body>
+    <p style=" font-weight: bold">
+      {{ userConnect }}
+    </p>
     <table>
       <tr>
         <th>login</th>
@@ -25,7 +28,11 @@
       </tr>
       {% for elem in listes %}
       <tr>
+        {% if userConnect == elem.name %}
+        <td style=" font-weight: bold">{{ elem.login }}</td>
+        {% else %}
         <td>{{ elem.login }}</td>
+        {% endif %}
         <td>{{ elem.pass }}</td>
         <td>{{ elem.name }}</td>
         {% if color1 !== null %}
@@ -35,5 +42,8 @@
       </tr>
       {% endfor %}
     </table>
+    <p>
+      <a href="/logout">Déconnexion</a>
+    </p>
   </body>
 </html>
